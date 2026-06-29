@@ -428,11 +428,6 @@ Potential future enhancements:
 
 This project is released under the MIT License.
 
-See:
-
-```text
-LICENSE
-```
 
 ---
 
