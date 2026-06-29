@@ -1,0 +1,187 @@
+CONTRACT_SOURCE_CODE = '''
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract ImageStorage {
+    struct Image {
+        string ipfsHash;      // IPFS hash of the image
+        string fileName;      // Original file name
+        string fileId;        // Google Drive file ID
+        uint256 timestamp;    // When the image was stored
+        address uploader;     // Who uploaded the image
+    }
+    
+    // Array to store all images
+    Image[] public images;
+    
+    // Mapping from IPFS hash to index in the images array
+    mapping(string => uint256) public hashToIndex;
+    
+    // Mapping to check if an image hash has already been stored
+    mapping(string => bool) public hashExists;
+    
+    // Mapping from file ID to index in the images array
+    mapping(string => uint256) public fileIdToIndex;
+    
+    // Event emitted when new image is stored
+    event ImageStored(
+        string ipfsHash,
+        string fileName,
+        string fileId,
+        uint256 timestamp,
+        address uploader
+    );
+    
+   
+    function storeImage(string memory ipfsHash, string memory fileName, string memory fileId) public {
+        // Check if this IPFS hash has already been stored
+        require(!hashExists[ipfsHash], "This image hash already exists");
+        
+        // Create new image
+        Image memory newImage = Image({
+            ipfsHash: ipfsHash,
+            fileName: fileName,
+            fileId: fileId,
+            timestamp: block.timestamp,
+            uploader: msg.sender
+        });
+        
+        // Store image in array
+        images.push(newImage);
+        uint256 index = images.length - 1;
+        
+        // Update mappings
+        hashToIndex[ipfsHash] = index;
+        hashExists[ipfsHash] = true;
+        fileIdToIndex[fileId] = index;
+        
+        // Emit event
+        emit ImageStored(
+            ipfsHash,
+            fileName,
+            fileId,
+            block.timestamp,
+            msg.sender
+        );
+    }
+    
+
+    function getTotalImages() public view returns (uint256 count) {
+        return images.length;
+    }
+
+    function getImageByIndex(uint256 index) public view returns (
+        string memory ipfsHash,
+        string memory fileName,
+        string memory fileId,
+        uint256 timestamp,
+        address uploader
+    ) {
+        require(index < images.length, "Image index out of bounds");
+        
+        Image storage img = images[index];
+        return (
+            img.ipfsHash,
+            img.fileName,
+            img.fileId,
+            img.timestamp,
+            img.uploader
+        );
+    }
+    
+    /**
+     * @dev Get image details by IPFS hash
+     * @param ipfsHash IPFS hash of the image
+     * @return hash The IPFS hash of the image
+     * @return fileName The original file name
+     * @return fileId The Google Drive file ID
+     * @return timestamp When the image was stored
+     * @return uploader Who uploaded the image
+     */
+    function getImageByHash(string memory ipfsHash) public view returns (
+        string memory hash,
+        string memory fileName,
+        string memory fileId,
+        uint256 timestamp,
+        address uploader
+    ) {
+        require(hashExists[ipfsHash], "Image with this hash does not exist");
+        
+        uint256 index = hashToIndex[ipfsHash];
+        Image storage img = images[index];
+        
+        return (
+            img.ipfsHash,
+            img.fileName,
+            img.fileId,
+            img.timestamp,
+            img.uploader
+        );
+    }
+    
+    function getImageByFileId(string memory fileId) public view returns (
+        string memory ipfsHash,
+        string memory fileName,
+        string memory id,
+        uint256 timestamp,
+        address uploader
+    ) {
+        require(bytes(fileId).length > 0, "File ID cannot be empty");
+        
+        uint256 index = fileIdToIndex[fileId];
+        Image storage img = images[index];
+        
+        return (
+            img.ipfsHash,
+            img.fileName,
+            img.fileId,
+            img.timestamp,
+            img.uploader
+        );
+    }
+    
+    /**
+     * @dev Get the most recent images
+     * @param count Number of recent images to retrieve
+     * @return ipfsHashes Array of IPFS hashes
+     * @return fileNames Array of file names
+     * @return fileIds Array of file IDs
+     * @return timestamps Array of timestamps
+     * @return uploaders Array of uploader addresses
+     */
+    function getRecentImages(uint256 count) public view returns (
+        string[] memory ipfsHashes,
+        string[] memory fileNames,
+        string[] memory fileIds,
+        uint256[] memory timestamps,
+        address[] memory uploaders
+    ) {
+        uint256 totalImages = images.length;
+        
+        // If requested count is more than available images, adjust it
+        if (count > totalImages) {
+            count = totalImages;
+        }
+        
+        // Initialize return arrays
+        ipfsHashes = new string[](count);
+        fileNames = new string[](count);
+        fileIds = new string[](count);
+        timestamps = new uint256[](count);
+        uploaders = new address[](count);
+        
+        // Populate arrays from most recent to oldest
+        for (uint256 i = 0; i < count; i++) {
+            uint256 index = totalImages - i - 1;
+            Image storage img = images[index];
+            
+            ipfsHashes[i] = img.ipfsHash;
+            fileNames[i] = img.fileName;
+            fileIds[i] = img.fileId;
+            timestamps[i] = img.timestamp;
+            uploaders[i] = img.uploader;
+        }
+        
+        return (ipfsHashes, fileNames, fileIds, timestamps, uploaders);
+    }
+} '''
