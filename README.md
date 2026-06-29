@@ -20,7 +20,7 @@
 
 > IoT-based Temperature and Humidity Monitoring System for Raspberry Pi with Blockchain Integration.
 >
-> The system continuously monitors environmental conditions using DHT22 sensors, detects threshold violations, stores records locally, sends real-time alerts via Telegram, and records critical events on blockchain for tamper-resistant monitoring and reporting.
+> The system continuously monitors environmental conditions using DHT22 sensors, detects threshold violations, stores records on-chain and off-chain, sends real-time alerts via Telegram, and records critical events on blockchain for tamper-resistant monitoring and reporting.
 
 ---
 
